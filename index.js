@@ -1,55 +1,24 @@
-// @ts-check
-
-import { machine } from "./simple-machine.js";
+import { machine } from "./machine.js";
 
 const m = machine(
   {
     open: {
       toggle: {
-        newState: "closed",
+        nextState: "closed",
       },
     },
     closed: {
       toggle: {
-        newState: "open",
-      },
-      force: {
-        newState: "bla",
-      },
-    },
-    bla: {
-      ok: {
-        newState: "open",
+        nextState: "open",
       },
     },
   },
-  "bla"
+  "closed"
 );
 
-// Valid event name (inferred as "toggle" | "force")
-m.onChange("force", (oldState, newState, event) => {
-  console.log(`${oldState} -> ${event} -> ${newState}`);
+m.onChange("change", (current, next) => {
+  console.log({ type: "change", current, next });
 });
 
-m.transition("force"); // OK
-m.transition("force"); // OK
-
-// Uncommenting the line below will produce a type error:
-// m.transition("invalid"); // Error: Argument of type '"invalid"' is not assignable to parameter of type '"toggle" | "force"'
-
-// Also, if you mistakenly provide an invalid newState:
-// const invalid = machine(
-//   {
-//     open: {
-//       toggle: {
-//         newState: "invalid", // Error: "invalid" is not assignable to "open" | "closed"
-//       },
-//     },
-//     closed: {
-//       toggle: {
-//         newState: "open",
-//       },
-//     },
-//   },
-//   "open"
-// );
+m.transition("toggle")
+m.transition("toggle")
