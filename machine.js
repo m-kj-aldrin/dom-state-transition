@@ -38,6 +38,7 @@ export function machine(stateMap, intialState) {
 
   /**@type {Listeners<EventNames<T> | "change",keyof T>} */
   let listeners = new Map();
+  listeners.set("change", new Set());
 
   /** @param {EventNames<T>} eventName */
   function transition(eventName) {
