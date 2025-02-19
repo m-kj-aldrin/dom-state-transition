@@ -1,6 +1,7 @@
 /**
  * @typedef {Object} DomEventObject
  * @property {string} [nextState]
+ * @property {(element: HTMLElement, event: Event) => boolean} [condition]
  * @property {(element: HTMLElement, event: Event) => void} [action]
  */
 
@@ -10,11 +11,11 @@
  */
 
 /**
- * @typedef {Object<string, [EventConstructor,DomEventObject][]>} DomEventState
+ * @typedef {Object<string, [EventConstructor, DomEventObject[]][]>} DomEventState
  */
 
 /**
- * @typedef {Object<string, Map<EventConstructor,DomEventObject>>} DomEventStateMapObject
+ * @typedef {Object<string, Map<EventConstructor, DomEventObject[]>>} DomEventStateMapObject
  */
 
 /**
@@ -31,9 +32,9 @@ export function defineDomStateMap(stateMap) {
     // Create a new Map for this state
     const eventMap = new Map();
 
-    // Add each event and its object to this state's map
-    for (const [event, object] of events) {
-      eventMap.set(event, object);
+    // Add each event and its handler array to this state's map
+    for (const [event, handlers] of events) {
+      eventMap.set(event, handlers);
     }
 
     // Add this state's event map to our result object
@@ -82,23 +83,27 @@ export function transitionDomEvent(stateMap, event, element, attributeName = "da
   if (!stateEventMap) return false;
 
   const eventConstructor = /** @type {EventConstructor} */ (event.constructor);
-  const eventObject = stateEventMap.get(eventConstructor);
+  const handlers = stateEventMap.get(eventConstructor); // handlers is an array of DomEventObject
 
-  // console.log({ eventObject });
+  if (!handlers) return false;
 
-  if (!eventObject) return false;
-
-  if (eventObject.condition) {
-    if (!eventObject.condition(element, event)) return false;
-  }
-
-  if (eventObject.action) {
-    eventObject.action(element, event);
-  }
-  if (!eventObject.nextState) {
+  // Iterate over all handlers and execute the first one that matches (condition passes)
+  for (const handler of handlers) {
+    // If a condition is defined and it fails, try the next handler
+    if (handler.condition && !handler.condition(element, event)) {
+      continue;
+    }
+    // Execute the action if provided
+    if (handler.action) {
+      handler.action(element, event);
+    }
+    // If nextState is defined, update our element's attribute and return the new state
+    if (handler.nextState) {
+      element.setAttribute(attributeName, handler.nextState);
+      return handler.nextState;
+    }
+    // If no nextState provided, simply return the current state after executing the action
     return currentState;
   }
-
-  element.setAttribute(attributeName, eventObject.nextState);
-  return eventObject.nextState;
+  return currentState;
 }

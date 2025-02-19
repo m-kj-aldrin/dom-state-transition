@@ -4,29 +4,35 @@ const testState = defineDomStateMap({
   open: [
     [
       KeyboardEvent,
-      {
-        condition: (element, event) => {
-          return event.key === "Enter";
+      [
+        {
+          nextState: "closed",
+          condition: (element, event) => ["Enter", " "].includes(event.key),
+          action: (element, event) => {
+            console.log({ msg: "open", element, event });
+          }
         },
-        nextState: "closed",
-        action: (element, event) => {
-          console.log({ msg: "open", element, event });
-        },
-      },
+        {
+          condition: (element, event) => ["ArrowUp", "ArrowDown"].includes(event.key),
+          action: (element, event) => {
+            console.log({ msg: "move", element, event });
+          }
+        }
+      ]
     ],
   ],
   closed: [
     [
       KeyboardEvent,
-      {
-        condition: (element, event) => {
-          return event.key === "Enter";
-        },
-        nextState: "open",
-        action: (element, event) => {
-          console.log({ msg: "closed", element, event });
-        },
-      },
+      [
+        {
+          nextState: "open",
+          condition: (element, event) => ["Enter", " "].includes(event.key),
+          action: (element, event) => {
+            console.log({ msg: "closed", element, event });
+          }
+        }
+      ]
     ],
   ],
 });
