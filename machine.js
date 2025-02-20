@@ -9,7 +9,7 @@
  * @template T
  * @typedef {Object} EventObject
  * @property {keyof T} [nextState]
- * @property {()=>void} [action]
+ * @property {(payload:Payload)=>void} [action]
  */
 
 /**
@@ -18,8 +18,12 @@
  */
 
 /**
+ * @typedef {Object} Payload
+ */
+
+/**
  * @template T
- * @typedef {(currentState:T,nextState:T)=>void} CallBack
+ * @typedef {(currentState:T,nextState:T,payload:Payload)=>void} CallBack
  */
 
 /**
@@ -40,8 +44,12 @@ export function machine(stateMap, intialState) {
   let listeners = new Map();
   listeners.set("change", new Set());
 
-  /** @param {EventNames<T>} eventName */
-  function transition(eventName) {
+  /**
+   * @param {EventNames<T>} eventName
+   * @param {Payload} payload
+   *
+   */
+  function transition(eventName, payload = {}) {
     const stateObject = stateMap[state];
     const eventObject = stateObject[eventName];
 
@@ -54,14 +62,18 @@ export function machine(stateMap, intialState) {
     }
 
     if (eventObject.action) {
-      eventObject.action();
+      eventObject.action(payload);
     }
 
     let changeHandlers = listeners.get("change");
-    changeHandlers.forEach((callback) => callback(currentState, state));
+    changeHandlers.forEach((callback) =>
+      callback(eventName,currentState, state, payload)
+    );
 
     let namedHandlers = listeners.get(eventName);
-    namedHandlers?.forEach((callback) => callback(currentState, state));
+    namedHandlers?.forEach((callback) =>
+      callback(currentState, state, payload)
+    );
   }
 
   /**

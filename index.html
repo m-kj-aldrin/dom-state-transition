@@ -21,8 +21,24 @@
         margin: 0;
         border-radius: 10px;
         background-color: #efeee5;
+        overflow: hidden;
+      }
+      body > div {
+        height: 100%;
+        display: grid;
+        place-items: center;
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <div>
+      <p>
+        state: <span id="state"></span>
+        <br>
+        event: <span id="event"></span>
+        <br>
+        idx: <span id="idx"></span>
+      </p>
+    </div>
+  </body>
 </html>
