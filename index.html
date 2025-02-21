@@ -25,20 +25,51 @@
       }
       body > div {
         height: 100%;
+      }
+      flex-box {
+        height: 100%;
+        display: flex;
+        gap: 10px;
+
+      }
+      .center {
+        padding: 20px;
+        padding-right: 40px;
         display: grid;
         place-items: center;
+      }
+
+      .container {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .box {
+        background-color: green;
+        padding: 30px;
+        --x: 0px;
+        --y: 0px;
+        transform: translate(var(--x), var(--y));
       }
     </style>
   </head>
   <body>
     <div>
-      <p>
-        state: <span id="state"></span>
-        <br>
-        event: <span id="event"></span>
-        <br>
-        idx: <span id="idx"></span>
-      </p>
+      <flex-box>
+        <div class="center">
+          <p>
+            state: <span id="state"></span>
+            <br />
+            event: <span id="event"></span>
+            <br />
+            idx: <span id="idx"></span>
+          </p>
+        </div>
+        <div class="container">
+          <div class="box"></div>
+        </div>
+      </flex-box>
     </div>
   </body>
 </html>

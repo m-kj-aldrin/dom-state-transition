@@ -7,14 +7,16 @@
 
 /**
  * @template T
+ * @template Ctx
  * @typedef {Object} EventObject
  * @property {keyof T} [nextState]
- * @property {(payload:Payload)=>void} [action]
+ * @property {(context:Ctx)=>void} [action]
  */
 
 /**
  * @template T
- * @typedef { { [K in keyof T]: { [E in keyof T[K]]: EventObject<T> } } } StateMap
+ * @template Ctx
+ * @typedef { { [K in keyof T]: { [E in keyof T[K]]: EventObject<T,Ctx> } } } StateMap
  */
 
 /**
@@ -34,10 +36,12 @@
 
 /**
  * @template {Base} T
- * @param {StateMap<T>} stateMap
+ * @template Ctx
+ * @param {Ctx} context
+ * @param {StateMap<T,Ctx>} stateMap
  * @param {keyof T} intialState
  */
-export function machine(stateMap, intialState) {
+export function machine(context, stateMap, intialState) {
   let state = intialState;
 
   /**@type {Listeners<EventNames<T> | "change",keyof T>} */
@@ -61,40 +65,69 @@ export function machine(stateMap, intialState) {
       state = eventObject.nextState;
     }
 
+    _listeners.forEach((callback) => callback(state, eventName, context));
+
     if (eventObject.action) {
-      eventObject.action(payload);
+      eventObject.action(context);
     }
 
-    let changeHandlers = listeners.get("change");
-    changeHandlers.forEach((callback) =>
-      callback(eventName,currentState, state, payload)
-    );
+    // let changeHandlers = listeners.get("change");
+    // changeHandlers.forEach((callback) =>
+    //   callback(eventName, currentState, state, payload)
+    // );
 
-    let namedHandlers = listeners.get(eventName);
-    namedHandlers?.forEach((callback) =>
-      callback(currentState, state, payload)
-    );
+    // let namedHandlers = listeners.get(eventName);
+    // namedHandlers?.forEach((callback) =>
+    //   callback(currentState, state, payload)
+    // );
   }
 
+  // /**
+  //  * @param {EventNames<T> | "change"} eventName
+  //  * @param {CallBack<keyof T>} callback
+  //  */
+  // function onChange(eventName, callback) {
+  //   let ref = listeners.get(eventName);
+
+  //   if (!ref) {
+  //     ref = new Set();
+  //     listeners.set(eventName, ref);
+  //   }
+
+  //   ref.add(callback);
+
+  //   return () => ref.delete(callback);
+  // }
+
+  /**@type {Set<(_state:typeof state,event:EventNames<T>,context:Ctx)=>void>} */
+  let _listeners = new Set();
+
   /**
-   * @param {EventNames<T> | "change"} eventName
-   * @param {CallBack<keyof T>} callback
+   * @param {(_state:typeof state,event:EventNames<T>,context:Ctx)=>void} callback
    */
-  function onChange(eventName, callback) {
-    let ref = listeners.get(eventName);
-
-    if (!ref) {
-      ref = new Set();
-      listeners.set(eventName, ref);
-    }
-
-    ref.add(callback);
-
-    return () => ref.delete(callback);
+  function onChange(callback) {
+    _listeners.add(callback);
   }
 
   return {
     transition,
     onChange,
   };
+}
+
+/**
+ * @template {string} T
+ * @template {string} K
+ * @param {Array<`${K}:${T}`>} aliasArr
+ * @returns {(name:K)=>T}
+ */
+export function alias(...aliasArr) {
+  /**@type {Record<T,K>} */
+  let names = aliasArr.reduce((acc, alias) => {
+    let [name, event] = alias.split(":");
+    acc[name] = event;
+    return acc;
+  }, {});
+
+  return (name) => names[name];
 }

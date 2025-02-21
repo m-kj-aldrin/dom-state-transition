@@ -1,40 +1,66 @@
-import { machine } from "./machine.js";
+import { alias, machine } from "./machine.js";
 
 const m = machine(
   {
+    stateEl: document.getElementById("state"),
+    eventEl: document.getElementById("event"),
+    idxEl: document.getElementById("idx"),
+    boxEl: /** @type {HTMLElement} */ (document.querySelector(".box")),
+  },
+  {
     open: {
-      toggle: { nextState: "closed" },
-      move: {},
+      toggle: {
+        nextState: "closed",
+        action: (context) => {
+          context.boxEl.style.backgroundColor = "red";
+        },
+      },
+      moveUp: {
+        action: (context) => {
+          let y = +context.boxEl.style.getPropertyValue("--y").split("px")[0];
+          let x = +context.boxEl.style.getPropertyValue("--x").split("px")[0];
+
+          context.boxEl.style.setProperty("--y", `${y - 10}px`);
+          context.boxEl.style.setProperty("--x", `${x}px`);
+        },
+      },
+      moveDown: {
+        action: (context) => {
+          let y = +context.boxEl.style.getPropertyValue("--y").split("px")[0];
+          let x = +context.boxEl.style.getPropertyValue("--x").split("px")[0];
+
+          context.boxEl.style.setProperty("--y", `${y + 10}px`);
+          context.boxEl.style.setProperty("--x", `${x}px`);
+        },
+      },
     },
     closed: {
-      toggle: { nextState: "open" },
+      toggle: {
+        nextState: "open",
+        action: (context) => {
+          context.boxEl.style.backgroundColor = "green";
+        },
+      },
     },
   },
-  "closed"
+  "open"
 );
 
-let idx = 0
-
-m.onChange("change", (eventName, current, next, payload) => {
-  document.body.dataset.state = next;
-  document.getElementById("state").textContent = next;
-  document.getElementById("event").textContent = eventName;
-  document.getElementById("idx").textContent = (idx++).toString();
+m.onChange((state, event, context) => {
+  context.stateEl.textContent = state;
+  context.eventEl.textContent = event;
 });
 
-m.onChange("toggle", (current, next, payload) => {
-  console.log({ type: "toggle", current, next, payload });
-});
-
-m.onChange("move", (current, next, payload) => {
-  console.log({ type: "move", current, next, payload });
-});
+let a = alias(
+  "ArrowUp:moveUp",
+  "ArrowDown:moveDown",
+  "Tab:moveDown",
+  "TabShift:moveUp",
+  "Enter:toggle",
+  " :toggle"
+);
 
 document.body.addEventListener("keydown", (e) => {
-  if (e.key == "Enter" || e.key == " ") {
-    m.transition("toggle");
-  }
-  if (e.key == "ArrowUp" || e.key == "ArrowDown") {
-    m.transition("move", { direction: e.key == "ArrowUp" ? 1 : -1 });
-  }
+  let event = a(e.key);
+  if (event) m.transition(event);
 });
