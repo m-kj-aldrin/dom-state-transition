@@ -60,7 +60,11 @@ let a = alias(
   " :toggle"
 );
 
-document.body.addEventListener("keydown", (e) => {
-  let event = a(e.key);
-  if (event) m.transition(event);
-});
+let result = a("helo"); // should return the union of null = moveUp | moveDown | moveUp | toggle | null
+
+m.transition(result);
+
+// document.body.addEventListener("keydown", (e) => {
+//   let event = a("ArrowDown");
+//   if (event) m.transition(event);
+// });
