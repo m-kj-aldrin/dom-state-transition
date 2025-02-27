@@ -52,6 +52,7 @@ m.onChange((state, event, context) => {
 });
 
 let a = alias(
+  "default:null",
   "ArrowUp:moveUp",
   "ArrowDown:moveDown",
   "Tab:moveDown",
@@ -60,7 +61,9 @@ let a = alias(
   " :toggle"
 );
 
-let result = a("helo"); // should return the union of null = moveUp | moveDown | moveUp | toggle | null
+let result = a("bla");
+
+result == null;
 
 m.transition(result);
 

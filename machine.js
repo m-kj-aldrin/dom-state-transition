@@ -117,18 +117,28 @@ export function machine(context, stateMap, intialState) {
 
 /**
  * @template {`${string}:${string}`} S
+ * @typedef {S extends `${infer K}:${infer V}` ? K : never} AliasKeys
+ */
+
+/**
+ * @template {`${string}:${string}`} S
+ * @typedef {S extends `${string}:${infer V}` ? V : never} AliasValues
+ */
+
+/**
+ * @template {`${string}:${string}`} S
  * @param {...S} aliasArr
- * @returns {<K extends S extends `${infer Key}:${string}` ? Key : string>(
- *   name: K
- * ) => Extract<S extends `${K}:${infer V}` ? V : never, string>}
+ * @returns {{
+ *   <K extends AliasKeys<S>>(name: K): Extract<S, `${K}:${string}`> extends `${K}:${infer V}` ? V : never;
+ *   (name: string): AliasValues<S> | null;
+ * }}
  */
 export function alias(...aliasArr) {
-  /** @type {Record<string, string>} */
-  let names = aliasArr.reduce((acc, alias) => {
-    let [name, event] = alias.split(":");
+  /** @type {Record<string, AliasValues<S>>} */
+  const names = aliasArr.reduce((acc, alias) => {
+    const [name, event] = alias.split(":");
     acc[name] = event;
     return acc;
   }, {});
-
-  return (name) => names[name];
+  return (name) => names[name] || null;
 }
